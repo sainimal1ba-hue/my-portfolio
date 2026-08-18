@@ -1,36 +1,19 @@
 "use client";
 
-import {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
-import {
-  motion,
-  useScroll,
-  useSpring,
-  useTransform,
-  useMotionValueEvent,
-} from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FrameLoader } from "./hero/frame-loader";
+import { CanvasRenderer } from "./hero/canvas-renderer";
+import { CinematicController } from "./hero/cinematic-controller";
+import { CinematicState } from "./hero/hero-types";
 
 const TOTAL_FRAMES = 240;
 const FRAME_PATH = "/frames/frame_";
 
-/* ── Word-by-word stagger component ── */
-function StaggeredWords({
-  text,
-  className,
-  delay = 0,
-}: {
-  text: string;
-  className?: string;
-  delay?: number;
-}) {
+function StaggeredWords({ text, delay = 0 }: { text: string; delay?: number }) {
   const words = text.split(" ");
   return (
-    <span className={className}>
+    <span>
       {words.map((word, i) => (
         <motion.span
           key={i}
@@ -50,392 +33,219 @@ function StaggeredWords({
   );
 }
 
-/* ── Beat overlay component ── */
-function BeatOverlay({
-  scrollProgress,
-  rangeStart,
-  rangeEnd,
-  alignment,
-  title,
-  subtitle,
-  isBeatA = false,
-  isCTA = false,
-}: {
-  scrollProgress: ReturnType<typeof useSpring>;
-  rangeStart: number;
-  rangeEnd: number;
-  alignment: "center" | "left" | "right";
-  title: string;
-  subtitle: string;
-  isBeatA?: boolean;
-  isCTA?: boolean;
-}) {
-  const fadeInEnd = rangeStart + (rangeEnd - rangeStart) * 0.1;
-  const fadeOutStart = rangeEnd - (rangeEnd - rangeStart) * 0.1;
-
-  const opacity = useTransform(scrollProgress, [
-    rangeStart,
-    fadeInEnd,
-    fadeOutStart,
-    rangeEnd,
-  ], [0, 1, 1, 0]);
-
-  const y = useTransform(scrollProgress, [
-    rangeStart,
-    fadeInEnd,
-    fadeOutStart,
-    rangeEnd,
-  ], [20, 0, 0, -10]);
-
-  // Beat A specific: brightness ramp + letter-spacing contraction
-  const beatALetterSpacing = useTransform(
-    scrollProgress,
-    [rangeStart, fadeInEnd],
-    ["0.25em", "0.12em"]
-  );
-
-  const beatABrightness = useTransform(
-    scrollProgress,
-    [rangeStart, fadeInEnd],
-    [0.3, 1]
-  );
-
-  const beatAFilter = useTransform(beatABrightness, (v) => `brightness(${v})`);
-
-  const [isVisible, setIsVisible] = useState(false);
-  useMotionValueEvent(opacity, "change", (v) => {
-    setIsVisible(v > 0.05);
-  });
-
-  const alignmentClasses = {
-    center: "items-center text-center",
-    left: "items-start text-left pl-8 md:pl-16 lg:pl-24",
-    right: "items-end text-right pr-8 md:pr-16 lg:pr-24",
-  };
-
-  if (!isVisible) return null;
-
-  return (
-    <motion.div
-      className={`absolute inset-0 flex flex-col justify-center ${alignmentClasses[alignment]} pointer-events-none px-6`}
-      style={{ opacity, y }}
-    >
-      {isBeatA ? (
-        <>
-          <motion.h1
-            className="text-7xl md:text-8xl lg:text-9xl font-light lowercase tracking-wide"
-            style={{
-              color: "rgba(237, 240, 242, 0.9)",
-              letterSpacing: beatALetterSpacing,
-              filter: beatAFilter,
-            }}
-          >
-            {title}
-          </motion.h1>
-          <motion.p
-            className="mt-4 max-w-xl text-sm md:text-base font-light leading-relaxed"
-            style={{ color: "rgba(237, 240, 242, 0.55)" }}
-          >
-            {isVisible && <StaggeredWords text={subtitle} delay={0.3} />}
-          </motion.p>
-        </>
-      ) : (
-        <>
-          <h2
-            className="text-3xl md:text-4xl lg:text-5xl font-light lowercase tracking-wide"
-            style={{ color: "rgba(237, 240, 242, 0.9)" }}
-          >
-            {isVisible && <StaggeredWords text={title} />}
-          </h2>
-          <p
-            className="mt-3 max-w-lg text-sm md:text-base font-light leading-relaxed"
-            style={{ color: "rgba(237, 240, 242, 0.55)" }}
-          >
-            {isVisible && <StaggeredWords text={subtitle} delay={0.2} />}
-          </p>
-          {isCTA && (
-            <motion.button
-              onClick={() => {
-                const el = document.getElementById("about");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="pointer-events-auto mt-6 rounded-full border px-6 py-2.5 text-xs tracking-[0.15em] lowercase transition-all duration-300 hover:bg-[rgba(125,211,252,0.1)]"
-              style={{
-                borderColor: "rgba(125, 211, 252, 0.3)",
-                color: "#7DD3FC",
-              }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              see what he&apos;s building
-            </motion.button>
-          )}
-        </>
-      )}
-    </motion.div>
-  );
-}
-
-/* ── Main Hero Component ── */
-export default function ThresholdHero() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
+export default function ThresholdHero({ onComplete }: { onComplete?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const currentFrameRef = useRef(0);
-  const rafRef = useRef<number>(0);
-
   const [loadProgress, setLoadProgress] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-  const { scrollYProgress } = useScroll({
-    target: wrapperRef,
-    offset: ["start start", "end end"],
-  });
+  const [state, setState] = useState<CinematicState>("IDLE");
+  const [progress, setProgress] = useState(0);
 
-  const springProgress = useSpring(scrollYProgress, {
-    stiffness: 60,
-    damping: 20,
-  });
+  const controllerRef = useRef<CinematicController | null>(null);
+  const loaderRef = useRef<FrameLoader | null>(null);
+  const rendererRef = useRef<CanvasRenderer | null>(null);
 
-  // State to track if user has started scrolling
-  const [hasScrolled, setHasScrolled] = useState(false);
+  // Initialize systems
+  useEffect(() => {
+    loaderRef.current = new FrameLoader(TOTAL_FRAMES, FRAME_PATH);
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (v > 0.005 && !hasScrolled) {
-      setHasScrolled(true);
-    } else if (v === 0 && hasScrolled) {
-      setHasScrolled(false);
+    if (canvasRef.current) {
+      rendererRef.current = new CanvasRenderer(canvasRef.current);
     }
-  });
 
-  // Hero→About transition: dim the canvas as we approach the end
-  const canvasDim = useTransform(scrollYProgress, [0.92, 1.0], [1, 0.3]);
-
-  /* ── Preload all frames ── */
-  useEffect(() => {
-    let loadedCount = 0;
-    const images: HTMLImageElement[] = new Array(TOTAL_FRAMES);
-    let cancelled = false;
-
-    const loadFrame = (index: number): Promise<void> => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.src = `${FRAME_PATH}${String(index).padStart(3, "0")}.webp`;
-        img.onload = () => {
-          if (!cancelled) {
-            images[index] = img;
-            loadedCount++;
-            setLoadProgress(loadedCount / TOTAL_FRAMES);
-            if (loadedCount === TOTAL_FRAMES) {
-              imagesRef.current = images;
-              setIsLoaded(true);
-            }
-          }
-          resolve();
-        };
-        img.onerror = () => {
-          // Still count it to avoid hanging
-          if (!cancelled) {
-            loadedCount++;
-            setLoadProgress(loadedCount / TOTAL_FRAMES);
-            if (loadedCount === TOTAL_FRAMES) {
-              imagesRef.current = images;
-              setIsLoaded(true);
-            }
-          }
-          resolve();
-        };
-      });
-    };
-
-    // Load in batches of 10 to avoid overwhelming the browser
-    const loadAll = async () => {
-      for (let batch = 0; batch < TOTAL_FRAMES; batch += 10) {
-        if (cancelled) break;
-        const promises: Promise<void>[] = [];
-        for (let i = batch; i < Math.min(batch + 10, TOTAL_FRAMES); i++) {
-          promises.push(loadFrame(i));
-        }
-        await Promise.all(promises);
-      }
-    };
-
-    loadAll();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /* ── Canvas rendering loop ── */
-  const drawFrame = useCallback(
-    (frameIndex: number) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      const img = imagesRef.current[frameIndex];
-
-      if (!canvas || !ctx || !img) return;
-
-      // Set canvas to image dimensions on first draw
-      if (canvas.width !== img.naturalWidth || canvas.height !== img.naturalHeight) {
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    // Draw initial frame
-    drawFrame(0);
-
-    const unsubscribe = springProgress.on("change", (v) => {
-      const index = Math.min(TOTAL_FRAMES - 1, Math.floor(v * (TOTAL_FRAMES - 1)));
-      if (index !== currentFrameRef.current) {
-        currentFrameRef.current = index;
-        // Use rAF for smooth drawing
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => {
-          drawFrame(index);
-        });
+    loaderRef.current.preload((p) => {
+      setLoadProgress(p);
+      // We consider it "ready" once the first 10% is loaded or it finishes
+      if (p > 0.1 && !isReady) {
+        setIsReady(true);
       }
     });
 
     return () => {
-      unsubscribe();
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      loaderRef.current?.destroy();
+      controllerRef.current?.destroy();
     };
-  }, [isLoaded, springProgress, drawFrame]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  /* ── Reduced motion: show 3 static frames ── */
-  const prefersReducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Initialize Controller once ready
+  useEffect(() => {
+    if (!isReady || controllerRef.current) return;
 
-  const reducedMotionFrames = useMemo(() => [0, 120, 239], []);
+    controllerRef.current = new CinematicController({
+      durationMs: 10000,
+      totalFrames: TOTAL_FRAMES,
+      onProgress: (p, f) => {
+        setProgress(p);
+        const img = loaderRef.current?.getFrame(f);
+        if (img) rendererRef.current?.draw(img);
+      },
+      onStateChange: (s) => setState(s),
+      onComplete: () => {
+        if (onComplete) onComplete();
+        // Smoothly transition the user into the beginning of About
+        setTimeout(() => {
+          document.getElementById("about")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+    });
+
+    controllerRef.current.init();
+
+    // Check reduced motion
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      // Instead of skipping, we just let it play out or we can immediately finish it
+      // if finishCinematic was public, but we just leave it playing fast or normal
+      // since the CSS takes care of reduced motion for other UI elements.
+    }
+  }, [isReady, onComplete]);
+
+  type HeroTextState = "identity" | "statement" | "quote";
+  
+  let textState: HeroTextState = "identity";
+  if (progress < 0.22) {
+    textState = "identity";
+  } else if (progress < 0.68) {
+    textState = "statement";
+  } else {
+    textState = "quote";
+  }
 
   return (
-    <div
+    <section
       id="hero-wrapper"
-      ref={wrapperRef}
-      className="relative"
-      style={{ height: "500vh" }}
+      className="relative w-full h-[100vh] bg-[#050505] overflow-hidden"
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden" style={{ background: "#050505" }}>
-        {/* Loading bar */}
-        {!isLoaded && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "#050505" }}>
-            <div className="w-48 md:w-64">
-              <div
-                className="h-px w-full overflow-hidden rounded-full"
-                style={{ background: "rgba(125, 211, 252, 0.1)" }}
-              >
-                <motion.div
-                  className="h-full origin-left"
-                  style={{
-                    background: "#7DD3FC",
-                    scaleX: loadProgress,
-                  }}
-                  transition={{ duration: 0.1 }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Canvas */}
-        {isLoaded && !prefersReducedMotion && (
+      {/* Loading Indicator */}
+      <AnimatePresence>
+        {!isReady && (
           <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ opacity: canvasDim }}
+            exit={{ opacity: 0 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-[1px] bg-[rgba(237,240,242,0.1)]"
           >
-            <canvas
-              ref={canvasRef}
-              className="h-full w-full"
-              style={{ objectFit: "contain" }}
-              aria-hidden="true"
+            <motion.div
+              className="h-full bg-[#7DD3FC]"
+              style={{ width: `${loadProgress * 100}%` }}
             />
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {/* Reduced motion: static frames */}
-        {isLoaded && prefersReducedMotion && (
-          <div className="absolute inset-0">
-            {reducedMotionFrames.map((frameIdx, i) => {
-              const start = i / 3;
-              const end = (i + 1) / 3;
-              return (
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full object-cover opacity-80"
+      />
+
+      {/* Dim overlay that fades in slightly towards the end */}
+      <div
+        className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+        style={{
+          backgroundColor: "#050505",
+          opacity: state === "COMPLETE" ? 0.7 : 0
+        }}
+      />
+
+      {isReady && (
+        <>
+          {/* Hero Typography States */}
+          <div className="absolute inset-0 pointer-events-none">
+            <AnimatePresence>
+              {textState === "identity" && (
                 <motion.div
-                  key={frameIdx}
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    opacity: useTransform(scrollYProgress, [start, end], [1, 0]),
-                  }}
+                  key="identity"
+                  initial={{ opacity: 0, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 1 } }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="absolute inset-0 flex flex-col justify-center items-end text-right pr-8 md:pr-16 lg:pr-24"
                 >
-                  {imagesRef.current[frameIdx] && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={imagesRef.current[frameIdx].src}
-                      alt=""
-                      className="h-full w-full object-contain"
-                    />
+                  <h1 
+                    className="text-6xl md:text-7xl lg:text-8xl font-light lowercase tracking-wide"
+                    style={{ color: "rgba(237, 240, 242, 0.9)" }}
+                  >
+                    sainimal
+                  </h1>
+                  <p
+                    className="mt-2 text-lg md:text-xl font-light tracking-[0.15em] lowercase"
+                    style={{ color: "rgba(237, 240, 242, 0.7)" }}
+                  >
+                    software developer
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {textState === "statement" && (
+                <motion.div
+                  key="statement"
+                  initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
+                  animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 1 } }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="absolute inset-0 flex flex-col justify-center items-end text-right pr-8 md:pr-16 lg:pr-24"
+                >
+                  <p
+                    className="max-w-sm text-lg md:text-xl font-light leading-relaxed"
+                    style={{ color: "rgba(237, 240, 242, 0.8)" }}
+                  >
+                    I build software where ideas<br />
+                    become systems people can use.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {textState === "quote" && (
+                <motion.div
+                  key="quote"
+                  initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
+                  animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  exit={{ opacity: 0, transition: { duration: 1 } }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="absolute inset-0 flex flex-col justify-center items-end text-right pr-8 md:pr-16 lg:pr-24 pointer-events-auto"
+                >
+                  <blockquote 
+                    className="max-w-md text-sm md:text-base font-light leading-relaxed mb-4"
+                    style={{ color: "rgba(237, 240, 242, 0.7)" }}
+                  >
+                    &ldquo;Computer science is no more about<br />
+                    computers than astronomy is about<br />
+                    telescopes.&rdquo;
+                  </blockquote>
+                  <cite 
+                    className="text-xs md:text-sm tracking-[0.1em] uppercase font-medium not-italic mb-12"
+                    style={{ color: "rgba(237, 240, 242, 0.5)" }}
+                  >
+                    — Edsger W. Dijkstra
+                  </cite>
+                  
+                  {state === "COMPLETE" && (
+                    <motion.a
+                      href="#projects"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById("projects")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5, duration: 1 }}
+                      className="group text-sm font-light tracking-widest uppercase inline-flex items-center gap-2 hover:opacity-100 transition-opacity cursor-pointer"
+                      style={{ color: "#7DD3FC" }}
+                    >
+                      check the projects
+                      <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </motion.a>
                   )}
                 </motion.div>
-              );
-            })}
+              )}
+            </AnimatePresence>
           </div>
-        )}
 
-        {/* Beat A: 0-20% */}
-        <BeatOverlay
-          scrollProgress={springProgress}
-          rangeStart={0}
-          rangeEnd={0.2}
-          alignment="center"
-          title="sainimal"
-          subtitle="software developer. this starts in the dark, alone — watch what the light finds."
-          isBeatA
-        />
-
-        {/* Beat B: 25-45% */}
-        <BeatOverlay
-          scrollProgress={springProgress}
-          rangeStart={0.25}
-          rangeEnd={0.45}
-          alignment="left"
-          title="something wakes up"
-          subtitle="not loud. just a small rectangle of light, deciding to exist."
-        />
-
-        {/* Beat C: 50-70% */}
-        <BeatOverlay
-          scrollProgress={springProgress}
-          rangeStart={0.5}
-          rangeEnd={0.7}
-          alignment="right"
-          title="he doesn't rush toward it"
-          subtitle="he just goes, the way you go toward something you already know."
-        />
-
-        {/* Beat D: 75-95% */}
-        <BeatOverlay
-          scrollProgress={springProgress}
-          rangeStart={0.75}
-          rangeEnd={0.95}
-          alignment="center"
-          title="now it's the only light left"
-          subtitle="see what he's building."
-          isCTA
-        />
-
-
-      </div>
-    </div>
+        </>
+      )}
+    </section>
   );
 }

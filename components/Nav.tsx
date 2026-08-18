@@ -12,24 +12,12 @@ const sections = [
   { id: "contact", label: "contact" },
 ];
 
-export default function Nav() {
+export default function Nav({ isCinematicComplete = false }: { isCinematicComplete?: boolean }) {
   const [activeSection, setActiveSection] = useState<string>("");
-  const [isPastHero, setIsPastHero] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
-    const heroEl = document.getElementById("hero-wrapper");
     const sectionEls = sections.map((s) => document.getElementById(s.id));
-
-    // Track hero exit for scrim
-    const heroObserver = new IntersectionObserver(
-      ([entry]) => {
-        setIsPastHero(!entry.isIntersecting);
-      },
-      { threshold: 0, rootMargin: "-80px 0px 0px 0px" }
-    );
-
-    if (heroEl) heroObserver.observe(heroEl);
 
     // Track active section
     const sectionObserver = new IntersectionObserver(
@@ -51,7 +39,6 @@ export default function Nav() {
     });
 
     return () => {
-      heroObserver.disconnect();
       sectionObserver.disconnect();
     };
   }, []);
@@ -66,10 +53,10 @@ export default function Nav() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-1000"
       style={{
-        opacity: isPastHero ? 1 : 0,
-        pointerEvents: isPastHero ? "auto" : "none",
+        opacity: isCinematicComplete ? 1 : 0,
+        pointerEvents: isCinematicComplete ? "auto" : "none",
         background: "rgba(5, 5, 5, 0.6)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
