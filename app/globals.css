@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* ── THRESHOLD — Design Tokens ── */
+@theme inline {
+  --color-bg: #050505;
+  --color-text-primary: rgba(237, 240, 242, 0.9);
+  --color-text-secondary: rgba(237, 240, 242, 0.57);
+  --color-accent: #7DD3FC;
+  --color-accent-dim: rgba(125, 211, 252, 0.15);
+  --color-accent-ghost: rgba(125, 211, 252, 0.03);
+  --color-accent-glow: rgba(125, 211, 252, 0.08);
+  --color-scrim: rgba(5, 5, 5, 0.6);
+
+  --font-sans: var(--font-instrument-sans);
+  --font-serif: var(--font-newsreader);
+}
+
+/* ── Base ── */
+html {
+  scroll-behavior: smooth;
+  background: #050505;
+}
+
+body {
+  background: #050505;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(125, 211, 252, 0.25);
+  color: #EDF0F2;
+}
+
+::-moz-selection {
+  background: rgba(125, 211, 252, 0.25);
+  color: #EDF0F2;
+}
+
+/* ── Focus States ── */
+*:focus-visible {
+  outline: 2px solid #7DD3FC;
+  outline-offset: 2px;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(125, 211, 252, 0.15);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(125, 211, 252, 0.35);
+}
+
+/* Firefox scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(125, 211, 252, 0.15) #050505;
+}
+
+/* ── Typography Utilities ── */
+.font-serif {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+}
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+/* ── Prefers Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Loading bar animation ── */
+@keyframes loadingProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ── Clip-path wipe for eyebrows ── */
+@keyframes clipWipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
