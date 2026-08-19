@@ -4,12 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const sections = [
-  { id: "about", label: "about" },
-  { id: "experience", label: "experience" },
-  { id: "projects", label: "projects" },
-  { id: "skills", label: "skills" },
-  { id: "challenges", label: "challenges" },
-  { id: "contact", label: "contact" },
+  { id: "about", label: "About" },
+  { id: "experience", label: "Experience" },
+  { id: "projects", label: "Projects" },
+  { id: "skills", label: "Skills" },
+  { id: "challenges", label: "Challenges" },
+  { id: "contact", label: "Contact" },
 ];
 
 export default function Nav({ isCinematicComplete = false }: { isCinematicComplete?: boolean }) {
@@ -81,7 +81,7 @@ export default function Nav({ isCinematicComplete = false }: { isCinematicComple
             <button
               key={section.id}
               onClick={() => scrollTo(section.id)}
-              className="group relative flex items-center gap-2 text-xs tracking-[0.12em] lowercase transition-all duration-300"
+              className="group relative flex items-center gap-2 text-xs tracking-[0.12em] transition-all duration-300"
               style={{
                 color:
                   activeSection === section.id
@@ -96,19 +96,11 @@ export default function Nav({ isCinematicComplete = false }: { isCinematicComple
               <AnimatePresence>
                 {activeSection === section.id && (
                   <motion.span
-                    initial={{ scale: 0.85, opacity: 0 }}
-                    animate={{
-                      scale: [0.85, 1.15, 1],
-                      opacity: 1,
-                      filter: [
-                        "brightness(1)",
-                        "brightness(1.8)",
-                        "brightness(1)",
-                      ],
-                    }}
-                    exit={{ scale: 0.85, opacity: 0 }}
+                    initial={{ opacity: 0, filter: "brightness(0.5)" }}
+                    animate={{ opacity: 1, filter: "brightness(1.5)" }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="block h-1.5 w-1.5 rounded-full"
+                    className="block h-1 w-1 rounded-full"
                     style={{ backgroundColor: "#7DD3FC" }}
                   />
                 )}
@@ -163,7 +155,7 @@ export default function Nav({ isCinematicComplete = false }: { isCinematicComple
                 <button
                   key={section.id}
                   onClick={() => scrollTo(section.id)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm tracking-[0.1em] lowercase transition-colors"
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm tracking-[0.1em] transition-colors"
                   style={{
                     color:
                       activeSection === section.id

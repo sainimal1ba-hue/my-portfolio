@@ -83,10 +83,6 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
       onStateChange: (s) => setState(s),
       onComplete: () => {
         if (onComplete) onComplete();
-        // Smoothly transition the user into the beginning of About
-        setTimeout(() => {
-          document.getElementById("about")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 100);
       }
     });
 
@@ -167,10 +163,10 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
                     sainimal
                   </h1>
                   <p
-                    className="mt-2 text-lg md:text-xl font-light tracking-[0.15em] lowercase"
+                    className="mt-2 text-lg md:text-xl font-light tracking-[0.15em]"
                     style={{ color: "rgba(237, 240, 242, 0.7)" }}
                   >
-                    software developer
+                    Software Developer
                   </p>
                 </motion.div>
               )}
@@ -235,7 +231,7 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
                       className="group text-sm font-light tracking-widest uppercase inline-flex items-center gap-2 hover:opacity-100 transition-opacity cursor-pointer"
                       style={{ color: "#7DD3FC" }}
                     >
-                      check the projects
+                      Check the projects
                       <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
                     </motion.a>
                   )}
