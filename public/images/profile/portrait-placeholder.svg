@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533" fill="none">
+  <!-- Background -->
+  <rect width="400" height="533" rx="8" fill="#0A0A0A"/>
+  
+  <!-- Subtle border -->
+  <rect x="0.5" y="0.5" width="399" height="532" rx="7.5" stroke="rgba(237,240,242,0.06)"/>
+  
+  <!-- Silhouette circle (head) -->
+  <circle cx="200" cy="200" r="60" fill="#141414"/>
+  
+  <!-- Silhouette body -->
+  <path d="M120 340 C120 290 150 270 200 270 C250 270 280 290 280 340 L280 380 L120 380 Z" fill="#141414"/>
+  
+  <!-- Camera icon hint -->
+  <rect x="175" y="420" width="50" height="36" rx="4" fill="none" stroke="rgba(125,211,252,0.15)" stroke-width="1"/>
+  <circle cx="200" cy="438" r="8" fill="none" stroke="rgba(125,211,252,0.15)" stroke-width="1"/>
+  
+  <!-- Subtle text -->
+  <text x="200" y="480" text-anchor="middle" fill="rgba(237,240,242,0.12)" font-family="system-ui, sans-serif" font-size="11" letter-spacing="0.1em">PORTRAIT</text>
+</svg>

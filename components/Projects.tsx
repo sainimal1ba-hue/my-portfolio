@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { SectionContainer } from "./animations";
 
 interface Project {
@@ -11,6 +12,8 @@ interface Project {
   link?: string;
   linkLabel?: string;
   variation: "default" | "structure-first" | "title-first";
+  /** Optional project image path relative to /public, e.g. "/images/projects/my-project.jpg" */
+  image?: string;
 }
 
 const projects: Project[] = [
@@ -20,8 +23,8 @@ const projects: Project[] = [
     description:
       "AI-powered WCAG accessibility auditing platform. Scans any public URL for WCAG 2.1/2.2 violations via axe-core, simulates real user disabilities (color blindness, low vision), and generates AI-powered code fixes using Gemini 2.5 Flash.",
     stack: ["React", "TypeScript", "Express", "Playwright", "MongoDB Atlas"],
-    link: "#",
-    linkLabel: "live demo (coming soon)",
+    link: "https://github.com/sainimal1ba-hue/accessibility-auditor2.0",
+    linkLabel: "view on github",
     variation: "title-first",
   },
   {
@@ -29,6 +32,8 @@ const projects: Project[] = [
     description:
       "Google Apps Script architecture that automates daily competitive-programming tracking across LeetCode, Codeforces, and AtCoder. Bypasses execution timeouts and API rate limits by distributing a central library across individual client accounts, eliminating manual data entry for the entire engineering batch.",
     stack: ["Google Apps Script"],
+    link: "https://github.com/vaibhav-bin/CP-Submissions-Tracker",
+    linkLabel: "view on github",
     variation: "structure-first",
   },
   {
@@ -37,8 +42,8 @@ const projects: Project[] = [
     description:
       "AI-native CRM with an autonomous dynamic pricing algorithm that analyzes purchase history, wishlists, and search patterns, generating personalized discount strategies from real-time shopping behavior.",
     stack: [],
-    link: "#",
-    linkLabel: "github (coming soon)",
+    link: "https://github.com/sainimal1ba-hue/Advanced-CRM-Model",
+    linkLabel: "view on github",
     variation: "default",
   },
 ];
@@ -89,6 +94,20 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
     >
       {/* Accent line extends on hover */}
       <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#7DD3FC] scale-y-0 opacity-0 group-hover:scale-y-100 group-hover:opacity-100 transition-all duration-500 origin-top" />
+
+      {/* Optional project image */}
+      {project.image && (
+        <div className="relative w-full mb-6 overflow-hidden rounded-lg" style={{ aspectRatio: "16 / 9" }}>
+          <Image
+            src={project.image}
+            alt={`${project.title} screenshot`}
+            fill
+            className="object-cover"
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 800px"
+          />
+        </div>
+      )}
 
       {/* Content wrapper */}
       <div className="flex flex-col h-full relative z-10">

@@ -2,24 +2,59 @@
 
 import { motion } from "framer-motion";
 import { SectionContainer } from "./animations";
+import { type IconType } from "react-icons";
+import {
+  SiPython,
+  SiJavascript,
+  SiC,
+  SiHtml5,
+  SiCss,
+  SiGit,
+  SiGithub,
+  SiMysql,
+  SiMongodb,
+} from "react-icons/si";
+import { FaJava } from "react-icons/fa";
+
+interface Skill {
+  name: string;
+  icon?: IconType;
+}
 
 interface SkillGroup {
   label: string;
-  items: string[];
+  items: Skill[];
 }
 
 const skillGroups: SkillGroup[] = [
   {
     label: "Technical",
-    items: ["Python", "Java", "C", "HTML", "CSS"],
+    items: [
+      { name: "Python", icon: SiPython },
+      { name: "Java", icon: FaJava },
+      { name: "C", icon: SiC },
+      { name: "HTML", icon: SiHtml5 },
+      { name: "CSS", icon: SiCss },
+      { name: "JavaScript", icon: SiJavascript },
+    ],
   },
   {
     label: "Tools & Technologies",
-    items: ["Git", "GitHub", "MySQL", "MongoDB"],
+    items: [
+      { name: "Git", icon: SiGit },
+      { name: "GitHub", icon: SiGithub },
+      { name: "MySQL", icon: SiMysql },
+      { name: "MongoDB", icon: SiMongodb },
+    ],
   },
   {
     label: "Also",
-    items: ["Problem Solving", "Teamwork", "Adaptability", "Quick Learner"],
+    items: [
+      { name: "Problem Solving" },
+      { name: "Teamwork" },
+      { name: "Adaptability" },
+      { name: "Quick Learner" },
+    ],
   },
 ];
 
@@ -83,20 +118,30 @@ export default function Skills() {
                 {group.label}
               </motion.h3>
 
-              <div className="flex flex-wrap gap-x-8 gap-y-4">
-                {group.items.map((skill) => (
-                  <motion.span
-                    key={skill}
-                    variants={{
-                      hidden: { opacity: 0, x: -5, filter: "blur(2px)" },
-                      visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } },
-                    }}
-                    className="text-base tracking-wide"
-                    style={{ color: "rgba(237, 240, 242, 0.65)" }}
-                  >
-                    {skill}
-                  </motion.span>
-                ))}
+              <div className="flex flex-wrap gap-x-8 gap-y-5">
+                {group.items.map((skill) => {
+                  const Icon = skill.icon;
+                  return (
+                    <motion.span
+                      key={skill.name}
+                      variants={{
+                        hidden: { opacity: 0, x: -5, filter: "blur(2px)" },
+                        visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } },
+                      }}
+                      className="group flex items-center gap-2 text-base tracking-wide transition-all duration-300 hover:brightness-125 hover:-translate-y-px cursor-default"
+                      style={{ color: "rgba(237, 240, 242, 0.65)" }}
+                    >
+                      {Icon && (
+                        <Icon
+                          size={22}
+                          className="shrink-0 transition-all duration-300 group-hover:text-[rgba(237,240,242,0.9)]"
+                          style={{ color: "rgba(237, 240, 242, 0.45)" }}
+                        />
+                      )}
+                      {skill.name}
+                    </motion.span>
+                  );
+                })}
               </div>
             </motion.div>
           ))}

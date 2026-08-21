@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "process:sequence": "node scripts/process-sequence.js"
   },
   "dependencies": {
     "framer-motion": "^13.1.0",
     "next": "16.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-icons": "^5.7.0",
+    "resend": "^6.20.0",
     "sharp": "^0.35.3"
   },
   "devDependencies": {

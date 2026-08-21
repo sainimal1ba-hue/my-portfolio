@@ -98,7 +98,7 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
   }, [isReady, onComplete]);
 
   type HeroTextState = "identity" | "statement" | "quote";
-  
+
   let textState: HeroTextState = "identity";
   if (progress < 0.22) {
     textState = "identity";
@@ -156,11 +156,11 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className="absolute inset-0 flex flex-col justify-center items-end text-right pr-8 md:pr-16 lg:pr-24"
                 >
-                  <h1 
-                    className="text-6xl md:text-7xl lg:text-8xl font-light lowercase tracking-wide"
+                  <h1
+                    className="text-6xl md:text-7xl lg:text-8xl font-light tracking-wide"
                     style={{ color: "rgba(237, 240, 242, 0.9)" }}
                   >
-                    sainimal
+                    SAINIMAL G E
                   </h1>
                   <p
                     className="mt-2 text-lg md:text-xl font-light tracking-[0.15em]"
@@ -203,7 +203,7 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className="absolute inset-0 flex flex-col justify-center items-end text-right pr-8 md:pr-16 lg:pr-24 pointer-events-auto"
                 >
-                  <blockquote 
+                  <blockquote
                     className="max-w-md text-sm md:text-base font-light leading-relaxed mb-4"
                     style={{ color: "rgba(237, 240, 242, 0.7)" }}
                   >
@@ -211,13 +211,13 @@ export default function ThresholdHero({ onComplete }: { onComplete?: () => void 
                     computers than astronomy is about<br />
                     telescopes.&rdquo;
                   </blockquote>
-                  <cite 
+                  <cite
                     className="text-xs md:text-sm tracking-[0.1em] uppercase font-medium not-italic mb-12"
                     style={{ color: "rgba(237, 240, 242, 0.5)" }}
                   >
                     — Edsger W. Dijkstra
                   </cite>
-                  
+
                   {state === "COMPLETE" && (
                     <motion.a
                       href="#projects"
